@@ -62,6 +62,8 @@ func (enc *Encoder) Write(v interface{})(int, error) {
 			return enc.writeTime(val)
 		case UUID:
 			return enc.writeUUID(val)
+		case []byte:
+			return enc.writeBytes(val)
 	}
 	return 0, nil
 }
@@ -161,6 +163,19 @@ func (enc *Encoder) writeUUID(a UUID)(int, error) {
 	copy(v[1:], a)
 	return enc.w.Write(v)
 }
+
+func (enc *Encoder) writeBytes(a []byte)(int, error) {
+	v := make([]byte, len(a) + 1)
+	if len(a) <= 255 {
+		v[0] = 0xa0
+	} else {
+		v[0] = 0xb0
+	}
+	copy(v[1:], a)
+	return enc.w.Write(v)
+}
+
+
 
 // Types
 // null indicates an empty value
