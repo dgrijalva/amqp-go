@@ -1,2 +1,94 @@
 package amqp
 
+import (
+	"testing"
+	"bytes"
+	"fmt"
+)
+
+var encodeTestData = []struct{
+	value interface{}
+	encoded []byte
+}{
+	{
+		nil,
+		[]byte{0x40},
+	},
+	{
+		true,
+		[]byte{0x41},
+	},
+	{
+		false,
+		[]byte{0x42},
+	},
+	{
+		byte(0),
+		[]byte{0x50, 0x00},
+	},
+	{
+		uint8(255),
+		[]byte{0x50, 0xFF},
+	},
+	{
+		uint16(0),
+		[]byte{0x60, 0x00, 0x00},
+	},
+	{
+		uint16(256),
+		[]byte{0x60, 0x01, 0x00},
+	},
+	{
+		uint32(1),
+		[]byte{0x70, 0x00, 0x00, 0x00, 0x01},
+	},
+	{
+		uint32(0xFFFFFFFF),
+		[]byte{0x70, 0xFF, 0xFF, 0xFF, 0xFF},
+	},
+	{
+		uint64(1),
+		[]byte{0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01},
+	},
+	{
+		uint64(0xFFFFFFFFFFFFFFFF),
+		[]byte{0x80, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
+	},
+	{
+		uint(0xFF),
+		[]byte{0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF},
+	},
+	{
+		int8(-1),
+		[]byte{0x51, 0xFF},
+	},
+	{
+		int16(-1),
+		[]byte{0x61, 0xFF, 0xFF},
+	},
+	{
+		int32(-1),
+		[]byte{0x71, 0xFF, 0xFF, 0xFF, 0xFF},
+	},
+	{
+		int64(-1),
+		[]byte{0x81, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
+	},
+	{
+		int(-1),
+		[]byte{0x81, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
+	},
+}
+
+func TestEncoding(t *testing.T){
+	for _, test := range encodeTestData {
+		name := fmt.Sprintf("<%T %v>", test.value, test.value)
+		if encoded, err := Marshal(test.value); err == nil {
+			if bytes.Compare(encoded, test.encoded) != 0 {
+				t.Errorf("%v Encoded value does not match.\n Expected: %v\n Got: %v", name, test.encoded, encoded)
+			}
+		} else {
+			t.Errorf("%v Error encoding: %v", name, err)
+		}
+	}
+}

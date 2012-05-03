@@ -27,6 +27,32 @@ func NewEncoder(w io.Writer) *Encoder {
 }
 
 func (enc *Encoder) Write(v interface{})(int, error) {
+	switch val := v.(type) {
+		case nil:
+			return enc.writeNull()
+		case bool:
+			return enc.writeBool(val)
+		case byte:
+			return enc.writeUbyte(val)
+		case uint16:
+			return enc.writeUshort(val)
+		case uint32:
+			return enc.writeUint(val)
+		case uint64:
+			return enc.writeUlong(val)
+		case uint:
+			return enc.writeUlong(uint64(val))
+		case int8:
+			return enc.writeByte(val)
+		case int16:
+			return enc.writeShort(val)
+		case int32:
+			return enc.writeInt(val)
+		case int64:
+			return enc.writeLong(val)
+		case int:
+			return enc.writeLong(int64(val))
+	}
 	return 0, nil
 }
 
@@ -53,21 +79,62 @@ func (enc *Encoder) writeUbyte(a byte)(int, error) {
 func (enc *Encoder) writeUshort(a uint16)(int, error) {
 	v := make([]byte, 3)
 	v[0] = 0x60
-	binary.BigEndian.PutUint16(v[1:2], a)
+	binary.BigEndian.PutUint16(v[1:], a)
+	return enc.w.Write(v)
+}
+
+func (enc *Encoder) writeUint(a uint32)(int, error) {
+	v := make([]byte, 5)
+	v[0] = 0x70
+	binary.BigEndian.PutUint32(v[1:], a)
+	return enc.w.Write(v)
+}
+
+func (enc *Encoder) writeUlong(a uint64)(int, error) {
+	v := make([]byte, 9)
+	v[0] = 0x80
+	binary.BigEndian.PutUint64(v[1:], a)
+	return enc.w.Write(v)
+}
+
+func (enc *Encoder) writeByte(a int8)(int, error) {
+	ua := uint8(a)
+	v := []byte{0x51, ua}
+	return enc.w.Write(v)
+}
+
+func (enc *Encoder) writeShort(a int16)(int, error) {
+	v := make([]byte, 3)
+	v[0] = 0x61
+	binary.BigEndian.PutUint16(v[1:], uint16(a))
+	return enc.w.Write(v)
+}
+
+func (enc *Encoder) writeInt(a int32)(int, error) {
+	v := make([]byte, 5)
+	v[0] = 0x71
+	binary.BigEndian.PutUint32(v[1:], uint32(a))
+	return enc.w.Write(v)
+}
+
+func (enc *Encoder) writeLong(a int64)(int, error) {
+	v := make([]byte, 9)
+	v[0] = 0x81
+	binary.BigEndian.PutUint64(v[1:], uint64(a))
 	return enc.w.Write(v)
 }
 
 // Types
 // null indicates an empty value
 // boolean represents a true or false value
-// ubyte integer in the range 0 to 28 - 1 inclusive
-// ushort integer in the range 0 to 216 - 1 inclusive
-// uint integer in the range 0 to 232 - 1 inclusive
-// ulong integer in the range 0 to 264 - 1 inclusive
-// byte integer in the range −(27) to 27 - 1 inclusive
-// short integer in the range −(215) to 215 - 1 inclusive
-// int integer in the range −(231) to 231 - 1 inclusive
-// long integer in the range −(263) to 263 - 1 inclusive
+// ubyte integer in the range 0 to 2^8 - 1 inclusive
+// ushort integer in the range 0 to 2^16 - 1 inclusive
+// uint integer in the range 0 to 2^32 - 1 inclusive
+// ulong integer in the range 0 to 2^64 - 1 inclusive
+// byte integer in the range −(2^7) to 2^7 - 1 inclusive
+// short integer in the range −(2^15) to 2^15 - 1 inclusive
+// int integer in the range −(2^31) to 2^31 - 1 inclusive
+// long integer in the range −(2^63) to 2^63 - 1 inclusive
 // float 32-bit floating point number (IEEE 754-2008 binary32) double 64-bit floating point number (IEEE 754-2008 binary64) decimal32 32-bit decimal number (IEEE 754-2008 decimal32) decimal64 64-bit decimal number (IEEE 754-2008 decimal64) decimal128 128-bit decimal number (IEEE 754-2008 decimal128)
 // char a single unicode character
 // timestamp an absolute point in time
