@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"math"
 	"time"
+	"reflect"
 )
 
 func Marshal(v interface{})([]byte, error) {
@@ -68,6 +69,12 @@ func (enc *Encoder) Write(v interface{})(int, error) {
 			return enc.writeString(val)
 		case Symbol:
 			return enc.writeSymbol(val)
+		default:
+			// fancier type lookups
+			value := reflect.ValueOf(v)
+			if value.Kind() == reflect.Slice {
+				return enc.writeSlice(value)
+			}
 	}
 	return 0, nil
 }
@@ -199,6 +206,28 @@ func (enc *Encoder) writeSymbol(a Symbol)(int, error) {
 	}
 	copy(v[1:], []byte(a))
 	return enc.w.Write(v)
+}
+
+func (enc *Encoder) writeSlice(a reflect.Value)(int, error) {
+	buf := new(bytes.Buffer)
+	e2 := NewEncoder(buf)
+	for i := 0; i < a.Len(); i++ {
+		val := a.Index(i).Interface()
+		e2.Write(val)
+	}
+	
+	bBytes := buf.Bytes()
+	
+	var tag []byte
+	if len(bBytes) > 255 {
+		tag = []byte{0xd0}
+	} else if len(bBytes) > 0 {
+		tag = []byte{0xc0, uint8(len(bBytes)), uint8(a.Len())}
+	} else {
+		tag = []byte{0x45}
+	}
+		
+	return enc.w.Write(append(tag, bBytes...))
 }
 
 // Types

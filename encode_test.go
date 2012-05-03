@@ -121,6 +121,14 @@ var encodeTestData = []struct{
 		Symbol(genLetters(256)),
 		append([]byte{0xb3}, []byte(genLetters(256))...),
 	},
+	{
+		[]uint16{},
+		[]byte{0x45},
+	},
+	{
+		[]uint16{0, 1, 0x0100},
+		[]byte{0xc0, 0x09, 0x03, 0x60, 0x00, 0x00, 0x60, 0x00, 0x01, 0x60, 0x01, 0x00},
+	},
 }
 
 func TestEncoding(t *testing.T){
