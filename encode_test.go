@@ -78,6 +78,14 @@ var encodeTestData = []struct{
 		int(-2),
 		[]byte{0x81, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFE},
 	},
+	{
+		float32(-2.05),
+		[]byte{0x72, 0xC0, 0x03, 0x33, 0x33},
+	},
+	{
+		float64(-2.05),
+		[]byte{0x82, 0xC0, 0x00, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66},
+	},
 }
 
 func TestEncoding(t *testing.T){
@@ -85,7 +93,7 @@ func TestEncoding(t *testing.T){
 		name := fmt.Sprintf("<%T %v>", test.value, test.value)
 		if encoded, err := Marshal(test.value); err == nil {
 			if bytes.Compare(encoded, test.encoded) != 0 {
-				t.Errorf("%v Encoded value does not match.\n Expected: %v\n Got: %v", name, test.encoded, encoded)
+				t.Errorf("%v Encoded value does not match.\n Expected: %v\n Got:      %v", name, test.encoded, encoded)
 			}
 		} else {
 			t.Errorf("%v Error encoding: %v", name, err)

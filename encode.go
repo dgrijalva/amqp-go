@@ -4,6 +4,7 @@ import (
 	"io"
 	"bytes"
 	"encoding/binary"
+	"math"
 )
 
 func Marshal(v interface{})([]byte, error) {
@@ -52,6 +53,10 @@ func (enc *Encoder) Write(v interface{})(int, error) {
 			return enc.writeLong(val)
 		case int:
 			return enc.writeLong(int64(val))
+		case float32:
+			return enc.writeFloat32(val)
+		case float64:
+			return enc.writeFloat64(val)
 	}
 	return 0, nil
 }
@@ -121,6 +126,20 @@ func (enc *Encoder) writeLong(a int64)(int, error) {
 	v := make([]byte, 9)
 	v[0] = 0x81
 	binary.BigEndian.PutUint64(v[1:], uint64(a))
+	return enc.w.Write(v)
+}
+
+func (enc *Encoder) writeFloat32(a float32)(int, error) {
+	v := make([]byte, 5)
+	v[0] = 0x72
+	binary.BigEndian.PutUint32(v[1:], math.Float32bits(a))
+	return enc.w.Write(v)
+}
+
+func (enc *Encoder) writeFloat64(a float64)(int, error) {
+	v := make([]byte, 9)
+	v[0] = 0x82
+	binary.BigEndian.PutUint64(v[1:], math.Float64bits(a))
 	return enc.w.Write(v)
 }
 
