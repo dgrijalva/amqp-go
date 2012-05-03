@@ -66,6 +66,8 @@ func (enc *Encoder) Write(v interface{})(int, error) {
 			return enc.writeBytes(val)
 		case string:
 			return enc.writeString(val)
+		case Symbol:
+			return enc.writeSymbol(val)
 	}
 	return 0, nil
 }
@@ -183,6 +185,17 @@ func (enc *Encoder) writeString(a string)(int, error) {
 		v[0] = 0xa1
 	} else {
 		v[0] = 0xb1
+	}
+	copy(v[1:], []byte(a))
+	return enc.w.Write(v)
+}
+
+func (enc *Encoder) writeSymbol(a Symbol)(int, error) {
+	v := make([]byte, len(a) + 1)
+	if len(a) <= 255 {
+		v[0] = 0xa3
+	} else {
+		v[0] = 0xb3
 	}
 	copy(v[1:], []byte(a))
 	return enc.w.Write(v)
