@@ -60,6 +60,8 @@ func (enc *Encoder) Write(v interface{})(int, error) {
 			return enc.writeFloat64(val)
 		case time.Time:
 			return enc.writeTime(val)
+		case UUID:
+			return enc.writeUUID(val)
 	}
 	return 0, nil
 }
@@ -150,6 +152,13 @@ func (enc *Encoder) writeTime(a time.Time)(int, error) {
 	v := make([]byte, 9)
 	v[0] = 0x83
 	binary.BigEndian.PutUint64(v[1:], uint64(a.UnixNano()) / 1e6)
+	return enc.w.Write(v)
+}
+
+func (enc *Encoder) writeUUID(a UUID)(int, error) {
+	v := make([]byte, 17)
+	v[0] = 0x98
+	copy(v[1:], a)
 	return enc.w.Write(v)
 }
 
