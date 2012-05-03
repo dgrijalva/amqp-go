@@ -105,6 +105,14 @@ var encodeTestData = []struct{
 		genBytes(256),
 		append([]byte{0xb0}, genBytes(256)...),
 	},
+	{
+		genLetters(10),
+		append([]byte{0xa1}, []byte(genLetters(10))...),
+	},
+	{
+		genLetters(256),
+		append([]byte{0xb1}, []byte(genLetters(256))...),
+	},
 }
 
 func TestEncoding(t *testing.T){
@@ -126,4 +134,12 @@ func genBytes(l int)[]byte {
 		byts[i] = byte(i & 0xFF)
 	}
 	return byts
+}
+
+func genLetters(l int)string {
+	byts := make([]byte, l)
+	for i, _ := range byts {
+		byts[i] = byte(i % 26) + 0x41
+	}
+	return string(byts)
 }
