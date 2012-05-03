@@ -220,7 +220,10 @@ func (enc *Encoder) writeSlice(a reflect.Value)(int, error) {
 	
 	var tag []byte
 	if len(bBytes) > 255 {
-		tag = []byte{0xd0}
+		tag = make([]byte, 9)
+		tag[0] = 0xd0
+		binary.BigEndian.PutUint32(tag[1:], uint32(len(bBytes)))
+		binary.BigEndian.PutUint32(tag[5:], uint32(a.Len()))
 	} else if len(bBytes) > 0 {
 		tag = []byte{0xc0, uint8(len(bBytes)), uint8(a.Len())}
 	} else {
