@@ -86,6 +86,7 @@ var encodeTestData = []struct{
 		float64(-2.05),
 		[]byte{0x82, 0xC0, 0x00, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66},
 	},
+	// TODO: decimal formats
 }
 
 func TestEncoding(t *testing.T){
