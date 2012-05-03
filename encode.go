@@ -75,6 +75,9 @@ func (enc *Encoder) Write(v interface{})(int, error) {
 			if value.Kind() == reflect.Slice {
 				return enc.writeSlice(value)
 			}
+			if value.Kind() == reflect.Map {
+				return enc.writeMap(value)
+			}
 	}
 	return 0, nil
 }
@@ -228,6 +231,29 @@ func (enc *Encoder) writeSlice(a reflect.Value)(int, error) {
 		tag = []byte{0xc0, uint8(len(bBytes)), uint8(a.Len())}
 	} else {
 		tag = []byte{0x45}
+	}
+		
+	return enc.w.Write(append(tag, bBytes...))
+}
+
+func (enc *Encoder) writeMap(a reflect.Value)(int, error) {
+	buf := new(bytes.Buffer)
+	e2 := NewEncoder(buf)
+	for _, keyVal := range a.MapKeys() {
+		e2.Write(keyVal.Interface())
+		e2.Write(a.MapIndex(keyVal).Interface())
+	}
+	
+	bBytes := buf.Bytes()
+	
+	var tag []byte
+	if len(bBytes) > 255 {
+		tag = make([]byte, 9)
+		tag[0] = 0xd1
+		binary.BigEndian.PutUint32(tag[1:], uint32(len(bBytes)))
+		binary.BigEndian.PutUint32(tag[5:], uint32(a.Len()))
+	} else {
+		tag = []byte{0xc1, uint8(len(bBytes)), uint8(a.Len())}
 	}
 		
 	return enc.w.Write(append(tag, bBytes...))
