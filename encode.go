@@ -69,6 +69,8 @@ func (enc *Encoder) Write(v interface{})(int, error) {
 			return enc.writeString(val)
 		case Symbol:
 			return enc.writeSymbol(val)
+		case DescribedValue:
+			return enc.writeDescribed(val)
 		default:
 			// fancier type lookups
 			value := reflect.ValueOf(v)
@@ -257,6 +259,15 @@ func (enc *Encoder) writeMap(a reflect.Value)(int, error) {
 	}
 		
 	return enc.w.Write(append(tag, bBytes...))
+}
+
+func (enc *Encoder) writeDescribed(a DescribedValue)(int, error) {
+	buf := new(bytes.Buffer)
+	e2 := NewEncoder(buf)
+	buf.Write([]byte{0x00})
+	e2.Write(a.Descriptor)
+	e2.Write(a.Value)
+	return enc.w.Write(buf.Bytes())
 }
 
 // Types
