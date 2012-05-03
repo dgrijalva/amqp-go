@@ -4,6 +4,7 @@ import (
 	"testing"
 	"bytes"
 	"fmt"
+	"time"
 )
 
 var encodeTestData = []struct{
@@ -87,6 +88,11 @@ var encodeTestData = []struct{
 		[]byte{0x82, 0xC0, 0x00, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66},
 	},
 	// TODO: decimal formats
+	// TODO: go rune -> amqp char
+	{
+		time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC),
+		[]byte{0x83, 0x00, 0x00, 0x01, 0x24, 0xE0, 0x53, 0x35, 0x80},
+	},
 }
 
 func TestEncoding(t *testing.T){
